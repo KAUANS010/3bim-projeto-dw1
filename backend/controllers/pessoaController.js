@@ -101,23 +101,35 @@ exports.criarPessoa = async (req, res) => {
 
 exports.obterPessoa = async (req, res) => {
   try {
-    const id = req.params.id; // cdpessoa é VARCHAR no banco
+    const id = req.params.id;
 
-    const result = await query(
-      'SELECT * FROM pessoa WHERE cdpessoa = $1',
-      [id]
-    );
-
-    if (result.rows.length === 0) {
+    // Busca pessoa
+    const pessoaResult = await query('SELECT * FROM pessoa WHERE cdpessoa = $1', [id]);
+    if (pessoaResult.rows.length === 0) {
       return res.status(404).json({ error: 'Pessoa não encontrada' });
     }
+    const pessoa = pessoaResult.rows[0];
 
-    res.json(result.rows[0]);
+    // Verifica se é funcionário
+    const funcionarioResult = await query('SELECT * FROM funcionario WHERE pessoacdpessoa = $1', [id]);
+    const funcionario = funcionarioResult.rows[0];
+
+    // Verifica se é cliente
+    const clienteResult = await query('SELECT * FROM cliente WHERE pessoacdpessoa = $1', [id]);
+    const cliente = clienteResult.rows[0];
+
+    res.json({
+      ...pessoa,
+      isFuncionario: !!funcionario,
+      funcionario,
+      isCliente: !!cliente,
+      cliente
+    });
   } catch (error) {
     console.error('Erro ao obter pessoa:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
-}
+};
 
 exports.atualizarPessoa = async (req, res) => {
   const id = req.params.id;
@@ -134,12 +146,13 @@ exports.atualizarPessoa = async (req, res) => {
 
     // Atualiza/insere/remove em funcionario
     if (tipo && tipo.includes('funcionario')) {
-      // Se já existe, atualiza; se não, insere
+      const salario = Number(dadosFuncionario?.salario) || 0;
+      const cargosidcargo = Number(dadosFuncionario?.cargosidcargo) || 1;
       await query(
         `INSERT INTO funcionario (pessoacdpessoa, salario, cargosidcargo)
          VALUES ($1, $2, $3)
          ON CONFLICT (pessoacdpessoa) DO UPDATE SET salario = $2, cargosidcargo = $3`,
-        [id, dadosFuncionario?.salario || 0, dadosFuncionario?.cargosidcargo || 1]
+        [id, salario, cargosidcargo]
       );
     } else {
       // Remove se existir
@@ -162,6 +175,12 @@ exports.atualizarPessoa = async (req, res) => {
     res.json({ message: 'Pessoa atualizada com sucesso!' });
   } catch (error) {
     await query('ROLLBACK');
+    // Adicione este tratamento:
+    if (error.code === '23503') {
+      return res.status(400).json({
+        error: 'Não é possível remover o cliente porque existem pedidos associados a ele.'
+      });
+    }
     console.error('Erro ao atualizar pessoa:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
@@ -179,6 +198,10 @@ exports.deletarPessoa = async (req, res) => {
     if (existingPersonResult.rows.length === 0) {
       return res.status(404).json({ error: 'Pessoa não encontrada' });
     }
+
+    // Exclua das tabelas dependentes ANTES de excluir da tabela pessoa
+    await query('DELETE FROM funcionario WHERE pessoacdpessoa = $1', [id]);
+    await query('DELETE FROM cliente WHERE pessoacdpessoa = $1', [id]);
 
     await query(
       'DELETE FROM pessoa WHERE cdpessoa = $1',

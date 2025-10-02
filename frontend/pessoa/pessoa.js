@@ -56,7 +56,7 @@ function bloquearCampos(bloquearPrimeiro) {
 // Função para limpar formulário
 function limparFormulario() {
     form.reset();
-    document.getElementById('checkboxFuncionario').checked = false;    
+    document.getElementById('checkboxFuncionario').checked = false;
     document.getElementById('checkboxCliente').checked = false;
 }
 
@@ -116,32 +116,6 @@ async function buscarPessoa() {
         console.error('Erro:', error);
         mostrarMensagem('Erro ao buscar pessoa', 'error');
     }
-
-    //Verifica se a pessoa é funcionario
-    try {
-        const responseFuncionario = await fetch(`${API_BASE_URL}/funcionario/${id}`);
-        if (responseFuncionario.status === 200) {
-            document.getElementById('checkboxFuncionario').checked = true;
-        } else {
-            document.getElementById('checkboxFuncionario').checked = false;
-        }
-    } catch (error) {
-        console.error('Erro ao verificar se é funcionario:', error);
-        document.getElementById('checkboxFuncionario').checked = false;
-    }
-
-    //Verifica se a pessoa é cliente
-    try {
-        const responseCliente = await fetch(`${API_BASE_URL}/cliente/${id}`);
-        if (responseCliente.status === 200) {
-            document.getElementById('checkboxCliente').checked = true;
-        } else {
-            document.getElementById('checkboxCliente').checked = false;
-        }
-    } catch (error) {
-        console.error('Erro ao verificar se é cliente:', error);
-        document.getElementById('checkboxCliente').checked = false;
-    }
 }
 
 // Função para preencher formulário com dados da pessoa
@@ -158,7 +132,42 @@ function preencherFormulario(pessoa) {
     } else {
         document.getElementById('datanascimentopessoa').value = '';
     }
+
+    // Checkbox funcionário e campos extras
+    const chkFuncionario = document.getElementById('checkboxFuncionario');
+    chkFuncionario.checked = pessoa.isFuncionario;
+    mostrarCamposFuncionario(pessoa.isFuncionario, pessoa.funcionario);
+
+    // Checkbox cliente
+    document.getElementById('checkboxCliente').checked = pessoa.isCliente;
 }
+
+// Adicione estas funções após preencherFormulario:
+function mostrarCamposFuncionario(mostrar, funcionario) {
+    let container = document.getElementById('camposFuncionario');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'camposFuncionario';
+        document.querySelector('.umParaum').appendChild(container);
+    }
+    container.innerHTML = mostrar ? `
+        <label>Salário: <input type="number" id="salarioFuncionario" value="${funcionario?.salario || ''}"></label>
+        <label>Cargo: <select id="cargoFuncionario"></select></label>
+    ` : '';
+    if (mostrar) carregarCargos(funcionario?.cargosidcargo);
+}
+
+async function carregarCargos(cargoSelecionado) {
+    const res = await fetch(`${API_BASE_URL}/cargo`);
+    const cargos = await res.json();
+    const select = document.getElementById('cargoFuncionario');
+    select.innerHTML = cargos.map(c => `<option value="${c.idcargo}" ${c.idcargo == cargoSelecionado ? 'selected' : ''}>${c.nomecargo}</option>`).join('');
+}
+
+// Evento para mostrar/ocultar campos de funcionário
+document.getElementById('checkboxFuncionario').addEventListener('change', e => {
+    mostrarCamposFuncionario(e.target.checked);
+});
 
 // Função para incluir pessoa
 async function incluirPessoa() {
@@ -214,23 +223,29 @@ async function salvarOperacao() {
         tipos.push('cliente');
     }
 
-    // Dados específicos para funcionário
-    const dadosFuncionario = {
-        salario: 0, // Valor padrão, pode ser modificado conforme necessário
-        cargosidcargo: 1 // Cargo padrão, pode ser modificado conforme necessário
-    };
+    // Dados específicos para funcionário (pegando dos inputs dinâmicos)
+    let dadosFuncionario = null;
+    if (tipos.includes('funcionario')) {
+        dadosFuncionario = {
+            salario: Number(document.getElementById('salarioFuncionario')?.value) || 0,
+            cargosidcargo: Number(document.getElementById('cargoFuncionario')?.value) || 1
+        };
+    }
 
     // Dados específicos para cliente
-    const dadosCliente = {
-        datadecadastrocliente: new Date().toISOString().split('T')[0]
-    };
+    let dadosCliente = null;
+    if (tipos.includes('cliente')) {
+        dadosCliente = {
+            datadecadastrocliente: new Date().toISOString().split('T')[0]
+        };
+    }
 
     // Preparar dados para envio
     const dadosEnvio = {
         ...pessoa,
         tipo: tipos.length > 0 ? tipos : null,
-        dadosFuncionario: tipos.includes('funcionario') ? dadosFuncionario : null,
-        dadosCliente: tipos.includes('cliente') ? dadosCliente : null
+        dadosFuncionario,
+        dadosCliente
     };
 
     try {
@@ -256,10 +271,10 @@ async function salvarOperacao() {
         } else if (operacao === 'alterar') {
             // Para alteração, mantemos a lógica existente por enquanto
             const response = await fetch(`${API_BASE_URL}/pessoa/${currentPersonId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dadosEnvio) // <-- CERTO, envia todos os dados necessários
-    });
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosEnvio) // <-- CERTO, envia todos os dados necessários
+            });
 
             if (response.ok) {
                 mostrarMensagem('Pessoa alterada com sucesso!', 'success');
@@ -331,7 +346,7 @@ async function carregarpessoa() {
 function renderizarTabelapessoa(pessoa) {
     pessoaTableBody.innerHTML = '';
 
-     pessoa.sort((a, b) => Number(a.cdpessoa) - Number(b.cdpessoa));
+    pessoa.sort((a, b) => Number(a.cdpessoa) - Number(b.cdpessoa));
 
     pessoa.forEach(pessoa => {
         const row = document.createElement('tr');
