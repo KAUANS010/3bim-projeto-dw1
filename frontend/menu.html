@@ -3,62 +3,44 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Menu Principal</title>
+  <title>Menu Principal - Gerência</title>
   <link rel="stylesheet" href="menu.css">
 </head>
 
 <body>
   <header>
     <div class="topo">
-      <h3>Menu Principal</h3>
+      <h3>Painel do Gerente</h3>
       <select id="oUsuario" onchange="handleUserAction(this.value)">
-        <option value="">usuario</option>
+        <option value="">Nome do Gerente</option>
         <option value="gerenciar-conta">Gerenciar Conta</option>
-        <option value="sair"><script></script>air</option>
+        <option value="sair">Sair</option>
       </select>
     </div>
 
     <nav class="nav">
       <ul class="nav__menu">
-        <li class="nav__menu-item"><a href="#">home</a></li>
-
         <li class="nav__menu-item">
-          <a href="#">Cadastros</a>
+          <a href="#">Gerenciar loja de tênis ▾</a>
           <ul class="nav__submenu">
-            <li class="nav__submenu-item"><a href="http://localhost:3001/cargo/abrirCrudCargo">Cargo</a></li>
-            <li class="nav__submenu-item"><a href="http://localhost:3001/pessoa/abrirCrudPessoa">Pessoa</a></li>
-            <!-- <li class="nav__submenu-item"><a href="http://localhost:3001/avaliacao/abrirCrudAvaliacao">Avaliação</a></li>          
-            <li class="nav__submenu-item"><a href="http://localhost:3001/avaliacaoHasPessoa/abrirCrudAvaliacaoHasPessoa">Avaliações e questões</a></li>           -->
-            
+            <li class="nav__submenu-item"><a href="http://localhost:3001/cargo/abrirCrudCargo">Gerenciar Cargos</a></li>
+            <li class="nav__submenu-item"><a href="http://localhost:3001/pessoa/abrirCrudPessoa">Gerenciar Pessoas</a></li>
+            <li class="nav__submenu-item"><a href="http://localhost:3001/produto/abrirCrudProduto">Gerenciar Produtos</a></li>
           </ul>
         </li>
-
-        <li class="nav__menu-item">
-          <a href="#">About</a>
-          <ul class="nav__submenu">
-            <li class="nav__submenu-item"><a href="#">Our Company</a></li>
-            <li class="nav__submenu-item"><a href="#">Our Team</a></li>
-            <li class="nav__submenu-item"><a href="#">Our Reach</a></li>
-          </ul>
-        </li>
-
-        <li class="nav__menu-item"><a href="#">Blog</a></li>
-        <li class="nav__menu-item"><a href="#">Contact</a></li>
-
       </ul>
     </nav>
   </header>
 
   <main>
-
     <section>
-      <p>section main....</p>
+      <h2>Bem-vindo ao Painel de Gerenciamento</h2>
+      <p>Utilize o menu acima para gerenciar os produtos, pessoas e cargos da sua loja.</p>
     </section>
-
   </main>
 
   <footer>
-    <p>&copy; 2025 - Meu Site</p>
+    <p>&copy; 2025 - Loja de Tênis</p>
   </footer>
 
   <script src="./menu.js"></script>

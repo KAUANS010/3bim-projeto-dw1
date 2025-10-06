@@ -79,24 +79,8 @@ app.use('/menu', menuRoutes);
 const pessoaRoutes = require('./routes/pessoaRoutes');
 app.use('/pessoa', pessoaRoutes);
 
-// const questaoRoutes = require('./routes/questaoRoutes');
-// app.use('/questao', questaoRoutes);
-
-// const professorRoutes = require('./routes/professorRoutes');
-// app.use('/professor', professorRoutes);
-
-// const avaliadorRoutes = require('./routes/avaliadorRoutes');
-// app.use('/avaliador', avaliadorRoutes);
-
-// const avaliadoRoutes = require('./routes/avaliadoRoutes');
-// app.use('/avaliado', avaliadoRoutes);
-
-
-// const avaliacaoRoutes = require('./routes/avaliacaoRoutes');
-// app.use('/avaliacao', avaliacaoRoutes);
-
-// const avaliacaoHasQuestaoRoutes = require('./routes/avaliacaoHasQuestaoRoutes');
-// app.use('/avaliacaoHasQuestao', avaliacaoHasQuestaoRoutes);
+const produtoRoutes = require('./routes/produtoRoutes');
+app.use('/produto', produtoRoutes);
 
 const cargoRoutes = require('./routes/cargoRoutes');
 app.use('/cargo', cargoRoutes);

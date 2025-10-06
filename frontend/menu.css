@@ -1,65 +1,121 @@
-/* Reset básico */
+/* Reset básico e Animação de Fundo */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+@keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Nova animação de pulso */
+@keyframes pulse-effect {
+    0% {
+        box-shadow: 0 0 0 0 rgba(2, 119, 189, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 12px rgba(2, 119, 189, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(2, 119, 189, 0);
+    }
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
     text-align: center;
+    background: linear-gradient(-45deg, #607D8B, #90A4AE, #B0BEC5, #ECEFF1);
+    background-size: 400% 400%;
+    animation: gradientAnimation 18s ease infinite;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Cabeçalho */
 header {
-    padding: 0rem 0rem 0rem 0rem;
-    background-color: aquamarine;
-}
-
-header h1 {
-    margin-bottom: 0rem;
-    font-size: 1.8rem;
-    color: #1a5d3c;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .topo {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    padding: 0.1rem 1.5rem 1.5rem 0.1rem;
+    padding: 1rem 2.5rem;
 }
 
 .topo h3 {
     margin: 0;
+    font-size: 1.7rem;
+    color: #263238; /* Cinza escuro azulado */
+    font-weight: 600;
+}
+
+/* Estilo do Seletor de Usuário (Login) */
+#oUsuario {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: transparent;
+    color: #37474F;
+    padding: 0.7rem 1.2rem;
+    border: 2px solid #B0BEC5;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+#oUsuario:hover {
+    background-color: #0277BD; /* Azul primário */
+    color: white;
+    border-color: #0277BD;
 }
 
 /* Menu principal */
 .nav {
-    background: linear-gradient(90deg, aquamarine, green);
-    padding: 0.5rem 0;
+    background-color: #37474F; /* Cinza escuro */
+    padding: 0.2rem 0;
 }
 
 .nav__menu {
     list-style: none;
     display: flex;
-    justify-content: center;
-    gap: 2rem;
+    justify-content: center; /* Centraliza o item de menu */
 }
 
 .nav__menu-item {
     position: relative;
 }
 
-.nav__menu-item a {
+.nav__menu-item > a {
     color: white;
     text-decoration: none;
     font-weight: bold;
-    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    padding: 1rem 2rem;
     display: block;
+    transition: background-color 0.3s ease;
+    border-radius: 8px; /* Cantos arredondados para o efeito */
+    
+    /* Aplicação da animação de pulso */
+    animation: pulse-effect 2.5s infinite;
+}
+
+.nav__menu-item > a:hover {
+    background-color: #455A64;
+    animation: none; /* Pausa a animação ao passar o mouse */
 }
 
 /* Submenu */
@@ -68,47 +124,57 @@ header h1 {
     position: absolute;
     top: 100%;
     left: 0;
-    background: white;
-    border: 1px solid #ccc;
+    background: #ffffff;
+    border-top: 3px solid #0277BD; /* Detalhe em azul */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     display: none;
-    min-width: 180px;
+    min-width: 240px;
     text-align: left;
+    border-radius: 0 0 8px 8px;
+    z-index: 1000;
+    overflow: hidden; /* Garante que os cantos arredondados funcionem */
 }
 
 .nav__submenu-item a {
-    color: #1a5d3c;
-    padding: 0.5rem 1rem;
+    color: #263238; /* Cinza escuro azulado */
+    padding: 1rem 1.5rem;
     display: block;
+    text-decoration: none;
+    transition: all 0.3s ease;
 }
 
 .nav__submenu-item a:hover {
-    background: aquamarine;
+    background: #F5F5F5; /* Cinza bem claro */
+    color: #0277BD; /* Azul primário */
+    padding-left: 1.8rem; /* Efeito sutil de deslocamento */
 }
 
-/* Hover para mostrar submenu */
+/* Lógica para mostrar submenu ao passar o mouse */
 .nav__menu-item:hover .nav__submenu {
     display: block;
 }
 
-/* Botão */
-button {
-    margin: 2rem;
-    padding: 0.5rem 1.5rem;
-    background: green;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+/* Conteúdo principal */
+main {
+    flex: 1;
+    padding: 3rem 2rem;
 }
 
-button:hover {
-    background: darkgreen;
+main h2 {
+    color: #37474F;
+    margin-bottom: 1rem;
+}
+
+main p {
+    color: #546E7A;
+    font-size: 1.1rem;
 }
 
 /* Rodapé */
 footer {
-    margin-top: 2rem;
-    padding: 1rem;
-    background: #f0f0f0;
+    margin-top: auto;
+    padding: 1.5rem;
+    background: #263238; /* Cinza bem escuro */
+    color: #CFD8DC; /* Cinza claro */
+    font-weight: 500;
 }
-
