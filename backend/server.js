@@ -85,6 +85,12 @@ app.use('/produto', produtoRoutes);
 const cargoRoutes = require('./routes/cargoRoutes');
 app.use('/cargo', cargoRoutes);
 
+const pedidoRoutes = require('./routes/pedidoRoutes');
+app.use('/pedido', pedidoRoutes);
+
+const pedidohasprodutoRoutes = require('./routes/pedidohasprodutoRoutes');
+app.use('/pedidohasproduto', pedidohasprodutoRoutes);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Rota padrão
