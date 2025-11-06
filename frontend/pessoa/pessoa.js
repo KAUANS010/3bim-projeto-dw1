@@ -28,8 +28,16 @@ btnExcluir.addEventListener('click', excluirPessoa);
 btnCancelar.addEventListener('click', cancelarOperacao);
 btnSalvar.addEventListener('click', salvarOperacao);
 
-mostrarBotoes(true, false, false, false, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-bloquearCampos(false);//libera pk e bloqueia os demais campos
+// Evento para mostrar/ocultar campos de funcionário
+document.getElementById('checkboxFuncionario').addEventListener('change', e => {
+    // ALTERAÇÃO 2.1: Garante que os campos apareçam editáveis se a operação for 'incluir' ou 'alterar'
+    const isEditing = operacao === 'incluir' || operacao === 'alterar';
+    mostrarCamposFuncionario(e.target.checked, null, isEditing);
+});
+
+
+mostrarBotoes(true, false, false, false, false, false); // mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
+bloquearCampos(false); //libera pk e bloqueia os demais campos
 
 // Função para mostrar mensagens
 function mostrarMensagem(texto, tipo = 'info') {
@@ -43,7 +51,7 @@ function bloquearCampos(bloquearPrimeiro) {
     const inputs = document.querySelectorAll('input, select,checkbox'); // Seleciona todos os inputs e selects do DOCUMENTO
     inputs.forEach((input, index) => {
         // console.log(`Input ${index}: ${input.name}, disabled: ${input.disabled}`);
-        if (index === 0) {
+        if (input.id === 'searchId') {
             // Primeiro elemento - bloqueia se bloquearPrimeiro for true, libera se for false
             input.disabled = bloquearPrimeiro;
         } else {
@@ -58,6 +66,8 @@ function limparFormulario() {
     form.reset();
     document.getElementById('checkboxFuncionario').checked = false;
     document.getElementById('checkboxCliente').checked = false;
+    // ALTERAÇÃO 2.2: Garante que os campos de funcionário sejam removidos ao limpar/cancelar
+    mostrarCamposFuncionario(false);
 }
 
 function mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar) {
@@ -89,7 +99,8 @@ async function buscarPessoa() {
         mostrarMensagem('Digite um ID para buscar', 'warning');
         return;
     }
-
+    
+    operacao = null; // Reseta a operação
     bloquearCampos(false);
     searchId.focus();
     try {
@@ -99,7 +110,7 @@ async function buscarPessoa() {
             const pessoa = await response.json();
             preencherFormulario(pessoa);
 
-            mostrarBotoes(true, false, true, true, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
+            mostrarBotoes(true, false, true, true, false, false); // mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
             mostrarMensagem('Pessoa encontrada!', 'success');
 
         } else if (response.status === 404) {
@@ -107,7 +118,7 @@ async function buscarPessoa() {
             searchId.value = id;
             mostrarBotoes(true, true, false, false, false, false); //mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
             mostrarMensagem('Pessoa não encontrada. Você pode incluir uma nova pessoa.', 'info');
-            bloquearCampos(false);//bloqueia a pk e libera os demais campos
+            bloquearCampos(false); //bloqueia a pk e libera os demais campos
             //enviar o foco para o campo de nome
         } else {
             throw new Error('Erro ao buscar pessoa');
@@ -136,77 +147,89 @@ function preencherFormulario(pessoa) {
     // Checkbox funcionário e campos extras
     const chkFuncionario = document.getElementById('checkboxFuncionario');
     chkFuncionario.checked = pessoa.isFuncionario;
-    mostrarCamposFuncionario(pessoa.isFuncionario, pessoa.funcionario);
+
+    // ALTERAÇÃO 2.3: Mostra os campos do funcionário como desabilitados (apenas leitura) após a busca.
+    // O terceiro parâmetro (isEditing) controla se os campos estarão habilitados ou não.
+    mostrarCamposFuncionario(pessoa.isFuncionario, pessoa.funcionario, false);
 
     // Checkbox cliente
     document.getElementById('checkboxCliente').checked = pessoa.isCliente;
 }
 
-// Adicione estas funções após preencherFormulario:
-function mostrarCamposFuncionario(mostrar, funcionario) {
+
+// ALTERAÇÃO 2.4: A função agora aceita um parâmetro 'isEditing'
+function mostrarCamposFuncionario(mostrar, funcionario, isEditing = false) {
     let container = document.getElementById('camposFuncionario');
     if (!container) {
         container = document.createElement('div');
         container.id = 'camposFuncionario';
-        document.querySelector('.umParaum').appendChild(container);
+        // Ajuste para inserir o container dentro do div 'funcionario' para manter a organização
+        document.querySelector('.funcionario').appendChild(container);
     }
+
+    // O atributo 'disabled' é adicionado aos campos se isEditing for falso
     container.innerHTML = mostrar ? `
-        <label>Salário: <input type="number" id="salarioFuncionario" value="${funcionario?.salario || ''}"></label>
-        <label>Cargo: <select id="cargoFuncionario"></select></label>
+        <label>Salário: <input type="number" id="salarioFuncionario" value="${funcionario?.salario || ''}" ${!isEditing ? 'disabled' : ''}></label>
+        <label>Cargo: <select id="cargoFuncionario" ${!isEditing ? 'disabled' : ''}></select></label>
     ` : '';
-    if (mostrar) carregarCargos(funcionario?.cargosidcargo);
+
+    if (mostrar) {
+        carregarCargos(funcionario?.cargosidcargo);
+    }
 }
 
 async function carregarCargos(cargoSelecionado) {
-    const res = await fetch(`${API_BASE_URL}/cargo`);
-    const cargos = await res.json();
-    const select = document.getElementById('cargoFuncionario');
-    select.innerHTML = cargos.map(c => `<option value="${c.idcargo}" ${c.idcargo == cargoSelecionado ? 'selected' : ''}>${c.nomecargo}</option>`).join('');
+    try {
+        const res = await fetch(`${API_BASE_URL}/cargo`);
+        const cargos = await res.json();
+        const select = document.getElementById('cargoFuncionario');
+        if (select) {
+            select.innerHTML = cargos.map(c => `<option value="${c.idcargo}" ${c.idcargo == cargoSelecionado ? 'selected' : ''}>${c.nomecargo}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar cargos:', error);
+        mostrarMensagem('Erro ao carregar lista de cargos', 'error');
+    }
 }
-
-// Evento para mostrar/ocultar campos de funcionário
-document.getElementById('checkboxFuncionario').addEventListener('change', e => {
-    mostrarCamposFuncionario(e.target.checked);
-});
 
 // Função para incluir pessoa
 async function incluirPessoa() {
-    mostrarMensagem('Digite os dados!', 'success');
+    operacao = 'incluir'; // Define a operação ANTES de qualquer manipulação de UI
     currentPersonId = searchId.value;
-    // console.log('Incluir nova pessoa - currentPersonId: ' + currentPersonId);
+    
     limparFormulario();
     searchId.value = currentPersonId;
+    
+    mostrarMensagem('Digite os dados para inclusão!', 'info');
     bloquearCampos(true);
-
-    mostrarBotoes(false, false, false, false, true, true); // mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
+    mostrarBotoes(false, false, false, false, true, true);
     document.getElementById('nomepessoa').focus();
-    operacao = 'incluir';
-    // console.log('fim nova pessoa - currentPersonId: ' + currentPersonId);
 }
 
 // Função para alterar pessoa
 async function alterarPessoa() {
-    mostrarMensagem('Digite os dados!', 'success');
-    bloquearCampos(true);
-    mostrarBotoes(false, false, false, false, true, true);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-    document.getElementById('nomepessoa').focus();
     operacao = 'alterar';
+    mostrarMensagem('Altere os dados desejados e salve!', 'info');
+    bloquearCampos(true);
+    mostrarBotoes(false, false, false, false, true, true);
+    document.getElementById('nomepessoa').focus();
+
+    // ALTERAÇÃO 2.5: Habilita os campos de funcionário (se existirem) ao entrar no modo de alteração
+    const salarioInput = document.getElementById('salarioFuncionario');
+    const cargoSelect = document.getElementById('cargoFuncionario');
+    if (salarioInput) salarioInput.disabled = false;
+    if (cargoSelect) cargoSelect.disabled = false;
 }
 
 // Função para excluir pessoa
 async function excluirPessoa() {
-    mostrarMensagem('Excluindo pessoa...', 'info');
-    currentPersonId = searchId.value;
-    //bloquear searchId
-    searchId.disabled = true;
-    bloquearCampos(false); // libera os demais campos
-    mostrarBotoes(false, false, false, false, true, true);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)           
     operacao = 'excluir';
+    mostrarMensagem('Confirme a exclusão clicando em Salvar.', 'warning');
+    // Apenas mostra os botões de confirmação, não altera os campos
+    mostrarBotoes(false, false, false, false, true, true);
 }
 
 async function salvarOperacao() {
-    //console.log('Operação:', operacao + ' - currentPersonId: ' + currentPersonId + ' - searchId: ' + searchId.value);
-
     const formData = new FormData(form);
     const pessoa = {
         cdpessoa: searchId.value,
@@ -249,61 +272,40 @@ async function salvarOperacao() {
     };
 
     try {
+        let response;
+        let successMessage = '';
+
         if (operacao === 'incluir') {
-            const response = await fetch(`${API_BASE_URL}/pessoa`, {
+            response = await fetch(`${API_BASE_URL}/pessoa`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dadosEnvio)
             });
-
-            if (response.ok) {
-                const resultado = await response.json();
-                mostrarMensagem('Pessoa criada com sucesso!', 'success');
-                carregarpessoa(); // Recarregar a lista
-            } else {
-                const erro = await response.json();
-                mostrarMensagem(erro.error || 'Erro ao criar pessoa', 'error');
-                return;
-            }
-
+            successMessage = 'Pessoa criada com sucesso!';
         } else if (operacao === 'alterar') {
-            // Para alteração, mantemos a lógica existente por enquanto
-            const response = await fetch(`${API_BASE_URL}/pessoa/${currentPersonId}`, {
+            response = await fetch(`${API_BASE_URL}/pessoa/${currentPersonId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dadosEnvio) // <-- CERTO, envia todos os dados necessários
+                body: JSON.stringify(dadosEnvio)
             });
-
-            if (response.ok) {
-                mostrarMensagem('Pessoa alterada com sucesso!', 'success');
-                carregarpessoa(); // Recarregar a lista
-            } else {
-                const erro = await response.json();
-                mostrarMensagem(erro.error || 'Erro ao alterar pessoa', 'error');
-                return;
-            }
-
+            successMessage = 'Pessoa alterada com sucesso!';
         } else if (operacao === 'excluir') {
-            const response = await fetch(`${API_BASE_URL}/pessoa/${currentPersonId}`, {
+            response = await fetch(`${API_BASE_URL}/pessoa/${currentPersonId}`, {
                 method: 'DELETE'
             });
-
-            if (response.ok) {
-                mostrarMensagem('Pessoa excluída com sucesso!', 'success');
-                carregarpessoa(); // Recarregar a lista
-            } else {
-                const erro = await response.json();
-                mostrarMensagem(erro.error || 'Erro ao excluir pessoa', 'error');
-                return;
-            }
+            successMessage = 'Pessoa excluída com sucesso!';
+        } else {
+            return; // Nenhuma operação definida
         }
 
-        // Resetar formulário após sucesso
-        limparFormulario();
-        currentPersonId = null;
-        operacao = null;
+        if (response.ok) {
+            mostrarMensagem(successMessage, 'success');
+            carregarpessoa();
+        } else {
+            const erro = await response.json();
+            mostrarMensagem(erro.error || `Erro na operação de ${operacao}`, 'error');
+            return; // Retorna para não limpar o formulário e permitir correção
+        }
 
     } catch (error) {
         console.error('Erro na operação:', error);
@@ -311,54 +313,59 @@ async function salvarOperacao() {
         return;
     }
 
-    mostrarBotoes(true, false, false, false, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-    bloquearCampos(false);//libera pk e bloqueia os demais campos
+    // Resetar estado da aplicação após sucesso
+    limparFormulario();
+    currentPersonId = null;
+    operacao = null;
+    mostrarBotoes(true, false, false, false, false, false);
+    bloquearCampos(false);
     document.getElementById('searchId').focus();
+    searchId.value = '';
 }
 
 // Função para cancelar operação
 function cancelarOperacao() {
     limparFormulario();
-    mostrarBotoes(true, false, false, false, false, false);// mostrarBotoes(btBuscar, btIncluir, btAlterar, btExcluir, btSalvar, btCancelar)
-    bloquearCampos(false);//libera pk e bloqueia os demais campos
+    mostrarBotoes(true, false, false, false, false, false);
+    bloquearCampos(false);
+    searchId.value = '';
     document.getElementById('searchId').focus();
     mostrarMensagem('Operação cancelada', 'info');
+    operacao = null;
+    currentPersonId = null;
 }
 
 // Função para carregar lista de pessoa
 async function carregarpessoa() {
     try {
         const response = await fetch(`${API_BASE_URL}/pessoa`);
-
         if (response.ok) {
-            const pessoa = await response.json();
-            renderizarTabelapessoa(pessoa);
+            const pessoas = await response.json();
+            renderizarTabelapessoa(pessoas);
         } else {
-            throw new Error('Erro ao carregar pessoa');
+            throw new Error('Erro ao carregar pessoas');
         }
     } catch (error) {
         console.error('Erro:', error);
-        mostrarMensagem('Erro ao carregar lista de pessoa', 'error');
+        mostrarMensagem('Erro ao carregar lista de pessoas', 'error');
     }
 }
 
 // Função para renderizar tabela de pessoa
-function renderizarTabelapessoa(pessoa) {
+function renderizarTabelapessoa(pessoas) {
     pessoaTableBody.innerHTML = '';
-
-    pessoa.sort((a, b) => Number(a.cdpessoa) - Number(b.cdpessoa));
-
-    pessoa.forEach(pessoa => {
+    pessoas.sort((a, b) => Number(a.cdpessoa) - Number(b.cdpessoa));
+    pessoas.forEach(pessoa => {
         const row = document.createElement('tr');
         row.innerHTML = `
-                    <td>
-                        <button class="btn-id" onclick="selecionarPessoa(${pessoa.cdpessoa})">
-                            ${pessoa.cdpessoa}
-                        </button>
-                    </td>
-                    <td>${pessoa.nomepessoa}</td>
-                    <td>${formatarData(pessoa.datanascimentopessoa)}</td>                 
-                `;
+            <td>
+                <button class="btn-id" onclick="selecionarPessoa(${pessoa.cdpessoa})">
+                    ${pessoa.cdpessoa}
+                </button>
+            </td>
+            <td>${pessoa.nomepessoa}</td>
+            <td>${formatarData(pessoa.datanascimentopessoa)}</td>                 
+        `;
         pessoaTableBody.appendChild(row);
     });
 }

@@ -4,20 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD - Pessoa</title>
-    <link rel="stylesheet" href="pessoa.css">
+    <title>CRUD - Forma de Pagamento</title>
+    <link rel="stylesheet" href="./formadepagamento.css">
 </head>
 
 <body>
     <header>
-        <h1>CRUD Pessoa</h1>
+        <h1>CRUD Forma Pagamento</h1>
     </header>
 
     <main>
         <section class="form-section">
-            <h2>Cadastro de Pessoa</h2>
+            <h2>Cadastro de Forma de Pagamento</h2>
 
-            <form id="pessoaForm">
+            <form id="formadepagamentoForm">
                 <div class="search-container">
                     <label for="searchId">Buscar por ID:</label>
                     <div class="search-input-group">
@@ -34,55 +34,40 @@
                 </div>
 
                 <fieldset id="formFields">
-                    <legend>Dados da Pessoa</legend>
+                    <legend>Dados da Forma de pagamento</legend>
 
                     <div class="form-group">
-                        <label for="nomepessoa">Nome:</label>
-                        <input type="text" id="nomepessoa" name="nomepessoa" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="datanascimentopessoa">Data de Nascimento:</label>
-                        <input type="date" id="datanascimentopessoa" name="datanascimentopessoa">
-                    </div>
+                        <label for="nomeformapagamento">Nome da  forma de pagamento:</label>
+                        <input type="text" id="nomeformapagamento" name="nomeformapagamento" required>
+                    </div>  
                 </fieldset>
             </form>
-            <div class="umParaum">
-                <div class="cliente">
-                    <input type="checkbox" id="checkboxCliente" name="checkboxCliente">
-                    <span>Cliente</span>
-                </div>
-                <div class="funcionario">
-                    <input type="checkbox" id="checkboxFuncionario" name="checkboxFuncionario">
-                    <span>Funcionário </span>
-                </div>
-            </div>
         </section>
 
         <section class="list-section">
             <div class="table-container">
-                <table id="pessoaTable">
+                <table id="formadepagamentosTable">
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Nome</th>
-                            <th>Data Nascimento</th>
+                            <th>Nome</th>                            
                         </tr>
                     </thead>
-                    <tbody id="pessoaTableBody">
-                        </tbody>
+                    <tbody id="formadepagamentosTableBody">
+                        <!-- Dados serão carregados dinamicamente -->
+                    </tbody>
                 </table>
             </div>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2025 CRUD Pessoa</p>
+        <p>&copy; 2025 CRUD Forma de Pagamento</p>
     </footer>
 
     <div id="messageContainer" class="message-container"></div>
 
-    <script src="pessoa.js" defer></script>
+    <script src="./formadepagamento.js" defer></script>
 
 </body>
 

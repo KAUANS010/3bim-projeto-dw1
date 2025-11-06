@@ -91,6 +91,9 @@ app.use('/pedido', pedidoRoutes);
 const pedidohasprodutoRoutes = require('./routes/pedidohasprodutoRoutes');
 app.use('/pedidohasproduto', pedidohasprodutoRoutes);
 
+const formadepagamentoRoutes = require('./routes/formadepagamentoRoutes');
+app.use('/formadepagamento', formadepagamentoRoutes);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Rota padrão

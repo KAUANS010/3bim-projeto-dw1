@@ -404,3 +404,17 @@ footer {
         padding: 1.5rem;
     }
 }
+
+
+/* Estilos para os campos dinâmicos de funcionário */
+#camposFuncionario {
+    margin-top: 1rem; /* <-- ESTA É A LINHA MAIS IMPORTANTE! Adiciona espaço acima. */
+    padding-left: 20px; /* Opcional: Recua os campos para alinhar melhor abaixo do checkbox */
+    display: flex;
+    flex-direction: column; /* Coloca Salário e Cargo um embaixo do outro, que fica mais organizado */
+    gap: 0.75rem; /* Adiciona um espaço entre os campos Salário e Cargo */
+}
+
+#camposFuncionario label {
+    font-weight: 500; /* Opcional: Deixa o texto "Salário:" e "Cargo:" com um leve negrito */
+}
