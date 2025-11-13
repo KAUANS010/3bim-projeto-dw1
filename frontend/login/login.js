@@ -1,91 +1,51 @@
-document.addEventListener('DOMContentLoaded', function() {
-  // Se o usuário já estiver logado, redireciona ele para o local correto.
-  verificarSessaoExistente();
+let emailGlobal = '';
+const API_BASE_URL = 'http://localhost:3001'; // Define  o host e a porta do servidor
 
-  const formLogin = document.getElementById('form-login');
-  if(formLogin) {
-    formLogin.addEventListener('submit', handleLogin);
-  }
-});
 
-async function verificarSessaoExistente() {
-  try {
-    // ADICIONE O ENDEREÇO COMPLETO DO BACKEND
-    const response = await fetch('http://localhost:3001/check-session', {
-      method: 'GET',
-      credentials: 'include'
+async function verificarEmail() {
+    const email = document.getElementById("email").value;
+    emailGlobal = email;
+
+    const response = await fetch(`${API_BASE_URL}/login/verificarEmail`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.logado) {
-        console.log('Usuário já logado:', data.user.nome);
-        redirecionarPorTipo(data.user.tipo);
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao verificar sessão existente:', error);
-  }
-}
-
-async function handleLogin(e) {
-  e.preventDefault();
-
-  const email = document.getElementById('email').value.trim();
-  const senha = document.getElementById('senha').value;
-
-  if (!email || !senha) {
-    alert('Por favor, preencha todos os campos.');
-    return;
-  }
-
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  submitBtn.textContent = 'Entrando...';
-  submitBtn.disabled = true;
-
-  try {
-    // ADICIONE O ENDEREÇO COMPLETO DO BACKEND
-    const response = await fetch('http://localhost:3001/login/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, senha })
-    });
-    
     const data = await response.json();
+    console.log("Resposta do servidor sobre verificar o email: "+data.nome + " - " + data.status);
 
-    if (!response.ok) {
-        throw new Error(data.message || 'Email ou senha inválidos.');
+    if (data.status === 'existe') {
+        document.getElementById("loginFrame").style.display = "none";
+        document.getElementById("senhaFrame").style.display = "block";
+        document.getElementById("nomeUsuario").innerText = `Olá, ${data.nome}`;
+    } else {
+        const cadastrar = confirm("E-mail não encontrado. Deseja se cadastrar?");
+        if (cadastrar) {
+            alert("Redirecionando para tela de cadastro... (não implementado)");
+        }
     }
-    
-    redirecionarPorTipo(data.tipo);
-
-  } catch (error) {
-    console.error('Erro no login:', error.message);
-    alert("---> "+  error.message);
-  } finally {
-    submitBtn.textContent = 'Entrar';
-    submitBtn.disabled = false;
-  }
 }
 
-function redirecionarPorTipo(tipo) {
-  switch (tipo) {
-    case 'gerente':
-      window.location.href = '../menu.html';
-      break;
-    case 'funcionario':
-      // Lembre-se de criar o arquivo 'loja_funcionario.html'
-      alert('Login como funcionário bem-sucedido! (Página de funcionário a ser criada)');
-      // window.location.href = '/loja_funcionario.html';
-      break;
-    case 'cliente':
-      // Lembre-se de criar o arquivo 'loja_cliente.html'
-      alert('Login como cliente bem-sucedido! (Página de cliente a ser criada)');
-      // window.location.href = '/loja_cliente.html';
-      break;
-    default:
-      console.error('Tipo de usuário desconhecido:', tipo);
-      break;
-  }
+async function verificarSenha() {
+    const senha = document.getElementById("senha").value;
+    //  alert("Verificando senha..." + senha);
+    const res = await fetch(API_BASE_URL + '/login/verificarSenha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailGlobal, senha }),
+        credentials: 'include'
+    });
+
+
+    const data = await res.json();
+    console.log("verificarSenha -> Resposta do servidor: " + JSON.stringify(data));
+   
+
+    if (data.status === 'ok') {
+        alert("Login bem-sucedido! Bem-vindo, " + data.nome);
+        window.location.href = API_BASE_URL + "../frontend/menu/menu.html";
+    } else {
+        alert("Senha incorreta!");
+    }
 }

@@ -1,41 +1,40 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>login - Loja de Tênis</title>
-  <link rel="stylesheet" href="login.css" />
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="login.css">
 </head>
 
 <body>
-  <div class="login-container">
-    <h2>login</h2>
 
-    <!-- Mensagem de aviso quando vem do pagamento -->
-    <div id="aviso-pagamento"
-      style="display: none; background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 15px; border-radius: 5px; color: #856404;">
-      <strong>⚠️ Atenção:</strong> Para finalizar sua compra, é necessário fazer login primeiro.
+  <!-- Container Master centralizado -->
+  <div class="master-container">
+
+    <!-- Frame do email -->
+    <div id="loginFrame" class="form-container">
+      <h2>Login</h2>
+      <label for="email">Digite seu email</label>
+      <input type="email" id="email" placeholder="Digite seu e-mail" value="kauan@email.com" required />
+      <button onclick="verificarEmail()">Avançar</button>
     </div>
 
-    <form id="form-login">
-      <input type="email" id="email" placeholder="Email" required value="kauan@loja.com" />
-      <input type="password" id="senha" placeholder="Senha" required value="admin"/>
-      <button type="submit">Entrar</button>
-    </form>
-    <p>Não tem conta? <a href="/cadastro/cadastro.html">Cadastre-se</a></p>
-
-    <!-- Botão para voltar (aparece apenas quando vem do pagamento) -->
-    <div id="botao-voltar" style="display: none; margin-top: 15px;">
-      <button type="button" onclick="voltarPagamento()"
-        style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-        ← Voltar ao Pagamento
-      </button>
+    <!-- Frame da senha -->
+    <div id="senhaFrame" class="form-container" style="display:none;">
+      <h2>Login</h2>
+      <p id="nomeUsuario"></p>
+      <label for="senha">Digite sua senha</label>
+      <input type="password" id="senha" placeholder="Digite sua senha" value="admin" required />
+      <button onclick="verificarSenha()">Entrar</button>
     </div>
+
+    <!-- Mensagens dinâmicas -->
+    <div class="message-container"></div>
+
   </div>
 
-  <!-- <script src="/public/session-manager.js"></script> -->
-  <script src="login.js"></script>
+  <script src="./login.js"></script>
 </body>
 
 </html>

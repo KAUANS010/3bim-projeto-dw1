@@ -1,117 +1,304 @@
-// A linha 'const bcrypt = require('bcrypt');' FOI REMOVIDA
-// A linha 'const SALT_ROUNDS = 10;' FOI REMOVIDA
-const { query } = require('../database');
-exports.teste = async (req, res) => {
-  console.log("chegou aqui");
+const db = require('../database.js');
 
+
+const path = require('path');
+
+exports.abrirTelaLogin = (req, res) => {
+  console.log('loginController - Rota /login - Acessando login.html');
+  res.sendFile(path.join(__dirname, '../../frontend/login/login.html'));
+};
+
+exports.verificaSeUsuarioEstaLogado = (req, res) => {
+  //console.log('loginController -> verificaSeUsuarioEstaLogado - Verificando se usuário está logado via cookie');
+
+  const usuario = req.cookies.usuarioLogado; // O cookie deve conter o nome/ID do usuário
+
+  // Se o cookie 'usuario' existe (o valor é uma string/nome do usuário)
+  if (usuario) {
+    // Usuário está logado. Retorna 'ok' e os dados do usuário.
+    // É importante garantir que o valor do cookie 'usuarioLogado' seja o nome/ID do usuário.
+    res.json({
+      status: 'ok',
+      usuario: usuario // Retorna o valor do cookie, que é o nome/ID do usuário
+    });
+  } else {
+    // Cookie não existe. Usuário NÃO está logado.
+    // res.json({
+    //   status: 'nao_logado',
+    //   mensagem: 'Usuário não autenticado.'
+    // });
+
+    res.redirect('/login');
+  }
 }
 
-exports.register = async (req, res) => {
+
+// Funções do controller
+exports.listarPessoas = async (req, res) => {
   try {
-    const { nome, email, senha, tipo = 'cliente' } = req.body;
-    if (!nome || !email || !senha) return res.status(400).json({ message: 'Campos obrigatórios faltando' });
-
-    // --- ALTERAÇÃO AQUI ---
-    // Trocamos o 'bcrypt.hash' para usar a função 'crypt' do pgcrypto
-    // Isso garante que os novos usuários sejam salvos no mesmo formato do seu gerente
-    const result = await query(
-      'INSERT INTO "users" (email, nome, senha, tipo) VALUES ($1, $2, crypt($3, gen_salt(\'bf\')), $4) RETURNING cduser, email, nome, tipo',
-      [email, nome, senha, tipo] // Passamos a senha em texto plano
-    );
-    // --- FIM DA ALTERAÇÃO ---
-
-    // cria sessão automaticamente
-    req.session.user = { id: result.rows[0].cduser, email: result.rows[0].email, nome: result.rows[0].nome, tipo: result.rows[0].tipo };
-
-    res.status(201).json({ cduser: result.rows[0].cduser, email: result.rows[0].email, nome: result.rows[0].nome, tipo: result.rows[0].tipo });
-  } catch (err) {
-    if (err && err.code === '23505') return res.status(400).json({ message: 'Email já cadastrado' });
-    console.error('Erro register:', err);
-    res.status(500).json({ message: 'Erro interno' });
+    const result = await db.query('SELECT * FROM pessoa ORDER BY cdpessoa');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao listar pessoas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
 
-exports.login = async (req, res) => {
-  console.log("chegou no login ")
-  console.log('login request - body:', req.body);
+exports.verificarEmail = async (req, res) => {
+  const { email } = req.body;
+//console.log("o que vem "+ email)
+  const sql = 'SELECT nomepessoa FROM pessoa WHERE emailpessoa = $1'; // Postgres usa $1, $2...
+
+  console.log('rota verificarEmail: ', sql, email);
+
   try {
-    const { email, senha } = req.body;
-    if (!email || !senha) return res.status(400).json({ message: 'Email e senha são obrigatórios' });
+    const result = await db.query(sql, [email]); // igual listarPessoas
 
-    // --- ALTERAÇÃO PRINCIPAL AQUI ---
-    // 1. A query SQL foi alterada.
-    //    - Ela não seleciona mais a senha (mais seguro).
-    //    - Ela usa 'senha = crypt($2, senha)' para pedir ao PostgreSQL para comparar a senha.
-    //    - $1 é o email, $2 é a senha em texto plano.
-    const result = await query(
-      'SELECT cduser, email, nome, tipo FROM "users" WHERE email = $1 AND senha = crypt($2, senha)',
-      [email, senha] // Passa o email e a senha
-    );
-    // --- FIM DA ALTERAÇÃO ---
-
-    // Se result.rows.length for 0, significa que o email ou a senha estavam errados.
-    if (result.rows.length === 0) {
-      // console.log("não")
-      return res.status(401).json({ message: 'Credenciais inválidas' });
+    if (result.rows.length > 0) {
+      return res.json({ status: 'existe', nome: result.rows[0].nomepessoa });
     }
 
-    // 2. A verificação com bcrypt foi REMOVIDA, pois o banco já fez.
-
-    // O usuário retornado pela query já está validado.
-    const user = result.rows[0];
-    //console.log("sla") --- passou
-    // 3. Cria a sessão
-    req.session.user = { id: user.cduser, email: user.email, nome: user.nome, tipo: user.tipo };
-    //console.log("session.user") --- passou
-    // 4. Retorna os dados do usuário (sem a senha)
-    res.json({ id: user.cduser, email: user.email, nome: user.nome, tipo: user.tipo });
-    //console.log("json") --- passou
+    res.json({ status: 'nao_encontrado' });
   } catch (err) {
-    console.error('Erro login:', err);
-    res.status(500).json({ message: 'Erro interno' });
+    console.error('Erro em verificarEmail:', err);
+    res.status(500).json({ status: 'erro', mensagem: err.message });
   }
 };
 
-exports.checkSession = (req, res) => {
-   // DEBUG: logs detalhados para inspecionar a requisição e a sessão
-  console.log('--- checkSession chamado ---');
-  console.log('method:', req.method, 'url:', req.originalUrl);
-  console.log('headers.cookie:', req.headers && req.headers.cookie);
-  console.log('req.cookies:', req.cookies);
-  console.log('sessionID:', req.sessionID);
-  console.log('req.session (raw):', req.session);
-  console.log('req.session.user:', req.session && req.session.user);
 
-  
-  if (req.session && req.session.user) {
-    return res.json({ logado: true, user: req.session.user });
-  } else {
-    return res.json({ logado: false });
+// Verificar senha
+exports.verificarSenha = async (req, res) => {
+  const { email, senha } = req.body;
+
+  const sqlPessoa = `
+    SELECT cdpessoa, nomepessoa 
+    FROM pessoa 
+    WHERE emailpessoa = $1 AND senhapessoa = $2
+  `;
+  const sqlCliente = `
+    SELECT * 
+    FROM cliente 
+    WHERE pessoacdpessoa = $1
+  `;
+
+    const sqlFuncionario = `
+    SELECT * 
+    FROM funcionario 
+    WHERE pessoacdpessoa = $1
+  `;
+
+  //console.log('Rota verificarSenha:', sqlPessoa, email, senha);
+
+  try {
+    // 1. Verifica se existe pessoa com email/senha
+    const resultPessoa = await db.query(sqlPessoa, [email, senha]);
+
+    if (resultPessoa.rows.length === 0) {
+      return res.json({ status: 'senha_incorreta' });
+    }
+
+    const { cdpessoa, nomepessoa } = resultPessoa.rows[0];
+    console.log('Usuário encontrado:', resultPessoa.rows[0]);
+
+    // 2. Verifica se é cliente
+    const resultCliente = await db.query(sqlCliente, [cdpessoa]);
+
+    let ehCliente = null;
+    if (resultCliente.rows.length === 0) {
+      ehCliente = "naoEhCliente";
+    } else {
+      ehCliente = "ehCliente";
+    }
+
+    // 2b. Verifica se é funcionário
+    const resultFuncionario = await db.query(sqlFuncionario, [cdpessoa]);
+
+    let ehFuncionario = null;
+    if (resultFuncionario.rows.length === 0) {
+      ehFuncionario = "naoEhFuncionario";
+    } else {
+      ehFuncionario = "ehFuncionario";
+    }
+
+    console.log(`Tipo de usuário - Cliente: ${ehCliente}, Funcionário: ${ehFuncionario}`);
+
+    // 3. Define cookie
+    res.cookie('usuarioLogado', nomepessoa, {
+      sameSite: 'None',
+      secure: true,
+      httpOnly: true,
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 1 dia
+    });
+
+    console.log("Cookie 'usuarioLogado' definido com sucesso");
+
+    // 4. Retorna dados para o frontend, o cookie será enviado ao frontend
+    return res.json({
+      status: 'ok',
+      nome: nomepessoa,
+    });
+
+  } catch (err) {
+    console.error('Erro ao verificar senha:', err);
+    return res.status(500).json({ status: 'erro', mensagem: err.message });
   }
-};
+}
 
-// Função de logout que estava faltando
-exports.isAuthenticated = (req, res, next) => {
-  console.log("isauthenticated")
-  if (req.session && req.session.user) {
-    return next();
-  }
-  res.status(401).json({ message: 'Não autorizado: É necessário estar logado.' });
-};
 
-exports.isGerente = (req, res, next) => {
-  if (req.session && req.session.user && req.session.user.tipo === 'gerente') {
-    return next();
-  }
-  res.status(403).json({ message: 'Acesso negado: Você precisa ser um gerente para acessar esta página.' });
-};
-
+// Logout
 exports.logout = (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      return res.status(500).json({ message: 'Erro ao fazer logout' });
-    }
-    res.clearCookie('sid'); // Limpa o cookie de sessão
-    res.json({ message: 'Logout bem-sucedido' });
+  res.clearCookie('usuarioLogado', {
+    sameSite: 'None',
+    secure: true,
+    httpOnly: true,
+    path: '/',
   });
+  console.log("Cookie 'usuarioLogado' removido com sucesso");
+  res.json({ status: 'deslogado' });
+}
+
+
+exports.criarPessoa = async (req, res) => {
+  //  console.log('Criando pessoa com dados:', req.body);
+  try {
+    const { cdpessoa, nomepessoa, emailpessoa, senhapessoa, primeiroacessopessoa = true, datanascimentopessoa } = req.body;
+
+    // Validação básica
+    if (!nomepessoa || !emailpessoa || !senhapessoa) {
+      return res.status(400).json({
+        error: 'Nome, email e senha são obrigatórios'
+      });
+    }
+
+    // Validação de email básica
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailpessoa)) {
+      return res.status(400).json({
+        error: 'Formato de email inválido'
+      });
+    }
+
+    const result = await db.query(
+      'INSERT INTO pessoa (cdpessoa, nomepessoa, emailpessoa, senhapessoa, primeiroacessopessoa, datanascimentopessoa) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [cdpessoa, nomepessoa, emailpessoa, senhapessoa, primeiroacessopessoa, datanascimentopessoa]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao criar pessoa:', error);
+
+    // Verifica se é erro de email duplicado (constraint unique violation)
+    if (error.code === '23505' && error.constraint === 'pessoaemailpessoakey') {
+      return res.status(400).json({
+        error: 'Email já está em uso'
+      });
+    }
+
+    // Verifica se é erro de violação de constraint NOT NULL
+    if (error.code === '23502') {
+      return res.status(400).json({
+        error: 'Dados obrigatórios não fornecidos'
+      });
+    }
+
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 };
+
+exports.obterPessoa = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'loginController-obterPessoa - ID deve ser um número válido' });
+    }
+
+    const result = await db.query(
+      'SELECT * FROM pessoa WHERE cdpessoa = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pessoa não encontrada' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao obter pessoa:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+
+// Função adicional para buscar pessoa por email
+exports.obterPessoaPorEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email é obrigatório' });
+    }
+
+    const result = await db.query(
+      'SELECT * FROM pessoa WHERE emailpessoa = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pessoa não encontrada' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao obter pessoa por email:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+// Função para atualizar apenas a senha
+exports.atualizarSenha = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { senha_atual, nova_senha } = req.body;
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'ID deve ser um número válido' });
+    }
+
+    if (!senha_atual || !nova_senha) {
+      return res.status(400).json({
+        error: 'Senha atual e nova senha são obrigatórias'
+      });
+    }
+
+    // Verifica se a pessoa existe e a senha atual está correta
+    const personResult = await db.query(
+      'SELECT * FROM pessoa WHERE cdpessoa = $1',
+      [id]
+    );
+
+    if (personResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Pessoa não encontrada' });
+    }
+
+    const person = personResult.rows[0];
+
+    // Verificação básica da senha atual (em produção, use hash)
+    if (person.senhapessoa !== senha_atual) {
+      return res.status(400).json({ error: 'Senha atual incorreta' });
+    }
+
+    // Atualiza apenas a senha
+    const updateResult = await db.query(
+      'UPDATE pessoa SET senhapessoa = $1 WHERE cdpessoa = $2 RETURNING cdpessoa, nomepessoa, emailpessoa, primeiroacessopessoa, datanascimentopessoa',
+      [nova_senha, id]
+    );
+
+    res.json(updateResult.rows[0]);
+  } catch (error) {
+    console.error('Erro ao atualizar senha:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+

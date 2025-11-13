@@ -1,126 +1,128 @@
--- =========================
--- CRIAÇÃO DO BANCO DE DADOS
--- =========================
--- Descomente as linhas abaixo se quiser recriar o schema
---DROP SCHEMA public CASCADE;
---CREATE SCHEMA public;
+-- ================================================================
+-- SCRIPT ADAPTADO (SEU PROJETO + FUNCIONALIDADES DO PROFESSOR)
+-- ================================================================
 
--- Conecte-se ao banco de dados desejado antes de executar
+-- 1. Remoção de objetos existentes (Boa prática do script do professor)
+-- Ordem reversa da criação para respeitar as chaves estrangeiras
+DROP TABLE IF EXISTS public.pagamentohasformapagamento CASCADE;
+DROP TABLE IF EXISTS public.pagamento CASCADE;
+DROP TABLE IF EXISTS public.pedidohasproduto CASCADE;
+DROP TABLE IF EXISTS public.pedido CASCADE;
+DROP TABLE IF EXISTS public.produto CASCADE;
+DROP TABLE IF EXISTS public.cliente CASCADE;
+DROP TABLE IF EXISTS public.funcionario CASCADE;
+DROP TABLE IF EXISTS public.cargo CASCADE;
+DROP TABLE IF EXISTS public.formadepagamento CASCADE;
+DROP TABLE IF EXISTS public.pessoa CASCADE;
+
+-- habilita pgcrypto (para criptografar senhas, como no script do professor)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- =========================
--- TABELAS
+-- 2. CRIAÇÃO DAS TABELAS
+-- (Estrutura do seu script com adições do script do professor)
 -- =========================
 
-CREATE TABLE pessoa (
+CREATE TABLE public.pessoa (
     cdpessoa VARCHAR(20) PRIMARY KEY,
     nomepessoa VARCHAR(60),
-    datanascimentopessoa DATE
+    datanascimentopessoa DATE,
+    senhapessoa VARCHAR(100), -- Coluna do script do professor
+    emailpessoa VARCHAR(75) UNIQUE -- Coluna do script do professor
 );
 
-CREATE TABLE cliente (
-    pessoacdpessoa VARCHAR(20) PRIMARY KEY REFERENCES pessoa(cdpessoa),
-    datadecadastrocliente DATE
+CREATE TABLE public.cliente (
+    pessoacdpessoa VARCHAR(20) PRIMARY KEY REFERENCES public.pessoa(cdpessoa),
+    datadecadastrocliente DATE,
+    rendacliente DOUBLE PRECISION -- Coluna do script do professor
 );
 
-CREATE TABLE cargo (
+CREATE TABLE public.cargo (
     idcargo SERIAL PRIMARY KEY,
     nomecargo VARCHAR(45)
 );
 
-CREATE TABLE funcionario (
-    pessoacdpessoa VARCHAR(20) PRIMARY KEY REFERENCES pessoa(cdpessoa),
+CREATE TABLE public.funcionario (
+    pessoacdpessoa VARCHAR(20) PRIMARY KEY REFERENCES public.pessoa(cdpessoa),
     salario DOUBLE PRECISION,
-    cargosidcargo INT REFERENCES cargo(idcargo)
+    cargosidcargo INT REFERENCES public.cargo(idcargo)
 );
 
-CREATE TABLE produto (
+CREATE TABLE public.produto (
     idproduto SERIAL PRIMARY KEY,
     nomeproduto VARCHAR(45),
     quantidadeemestoque INT,
     precounitario DOUBLE PRECISION
 );
 
-CREATE TABLE pedido (
+CREATE TABLE public.pedido (
     idpedido SERIAL PRIMARY KEY,
     datadopedido DATE,
-    clientepessoacdpessoa VARCHAR(20) REFERENCES cliente(pessoacdpessoa),
-    funcionariopessoacdpessoa VARCHAR(20) REFERENCES funcionario(pessoacdpessoa)
+    clientepessoacdpessoa VARCHAR(20) REFERENCES public.cliente(pessoacdpessoa),
+    funcionariopessoacdpessoa VARCHAR(20) REFERENCES public.funcionario(pessoacdpessoa)
 );
 
-CREATE TABLE pedidohasproduto (
-    produtoidproduto INT REFERENCES produto(idproduto),
-    pedidoidpedido INT REFERENCES pedido(idpedido),
+CREATE TABLE public.pedidohasproduto (
+    produtoidproduto INT REFERENCES public.produto(idproduto),
+    pedidoidpedido INT REFERENCES public.pedido(idpedido),
     quantidade INT,
     precounitario DOUBLE PRECISION,
     PRIMARY KEY (produtoidproduto, pedidoidpedido)
 );
 
-CREATE TABLE formadepagamento (
+CREATE TABLE public.formadepagamento (
     idformapagamento SERIAL PRIMARY KEY,
     nomeformapagamento VARCHAR(100)
 );
 
-CREATE TABLE pagamento (
-    pedidoidpedido INT PRIMARY KEY REFERENCES pedido(idpedido),
+CREATE TABLE public.pagamento (
+    pedidoidpedido INT PRIMARY KEY REFERENCES public.pedido(idpedido),
     datapagamento TIMESTAMP,
     valortotalpagamento DOUBLE PRECISION
 );
 
-CREATE TABLE pagamentohasformapagamento (
-    pagamentoidpedido INT REFERENCES pagamento(pedidoidpedido),
-    formapagamentoidformapagamento INT REFERENCES formadepagamento(idformapagamento),
+CREATE TABLE public.pagamentohasformapagamento (
+    pagamentoidpedido INT REFERENCES public.pagamento(pedidoidpedido),
+    formapagamentoidformapagamento INT REFERENCES public.formadepagamento(idformapagamento),
     valorpago DOUBLE PRECISION,
     PRIMARY KEY (pagamentoidpedido, formapagamentoidformapagamento)
 );
 
 
--- habilita pgcrypto (necessário para crypt())
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--- tabela users baseada no seu pedido
-CREATE TABLE IF NOT EXISTS "users" (
-  cduser SERIAL PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  nome TEXT NOT NULL,
-  senha TEXT NOT NULL, -- armazenará hash (bcrypt via pgcrypto)
-  tipo TEXT NOT NULL CHECK (tipo IN ('cliente','funcionario','gerente')),
-  quandocriado TIMESTAMP DEFAULT NOW()
-);
-
-
-
 -- =========================
--- POPULAÇÃO DAS TABELAS
+-- 3. POPULAÇÃO DAS TABELAS
+-- (Seus dados, adaptados para as novas colunas)
 -- =========================
 
--- Pessoa
-INSERT INTO pessoa VALUES
-('1','Ana Silva','1990-01-10'),
-('2','Bruno Souza','1985-02-15'),
-('3','Carlos Pereira','1992-03-20'),
-('4','Daniela Costa','1995-04-25'),
-('5','Eduardo Lima','1988-05-30'),
-('6','Fernanda Rocha','1991-06-10'),
-('7','Gustavo Alves','1993-07-12'),
-('8','Helena Dias','1996-08-14'),
-('9','Igor Martins','1994-09-16'),
-('10','Juliana Torres','1997-10-18');
+-- Pessoa (com senhapessoa e emailpessoa adicionados)
+INSERT INTO public.pessoa (cdpessoa, nomepessoa, datanascimentopessoa, senhapessoa, emailpessoa) VALUES
+('80','kauan','2008-08-03', 'admin', 'kauan@email.com'),
+('1','Ana Silva','1990-01-10', 'senha1', 'ana@email.com'),
+('2','Bruno Souza','1985-02-15', 'senha2', 'bruno@email.com'),
+('3','Carlos Pereira','1992-03-20', 'senha3', 'carlos@email.com'),
+('4','Daniela Costa','1995-04-25', 'senha4', 'daniela@email.com'),
+('5','Eduardo Lima','1988-05-30', 'senha5', 'eduardo@email.com'),
+('6','Fernanda Rocha','1991-06-10', 'senha6', 'fernanda@email.com'),
+('7','Gustavo Alves','1993-07-12', 'senha7', 'gustavo@email.com'),
+('8','Helena Dias','1996-08-14', 'senha8', 'helena@email.com'),
+('9','Igor Martins','1994-09-16', 'senha9', 'igor@email.com'),
+('10','Juliana Torres','1997-10-18', 'senha10', 'juliana@email.com');
 
--- Cliente
-INSERT INTO cliente VALUES
-('1','2023-01-01'),
-('2','2023-02-01'),
-('3','2023-03-01'),
-('4','2023-04-01'),
-('5','2023-05-01'),
-('6','2023-06-01'),
-('7','2023-07-01'),
-('8','2023-08-01'),
-('9','2023-09-01'),
-('10','2023-10-01');
+-- Cliente (com rendacliente adicionada)
+INSERT INTO public.cliente (pessoacdpessoa, datadecadastrocliente, rendacliente) VALUES
+('1', '2023-01-01', 2500.00),
+('2', '2023-02-01', 3200.00),
+('3', '2023-03-01', 1800.00),
+('4', '2023-04-01', 4000.00),
+('5', '2023-05-01', 2100.00),
+('6', '2023-06-01', 3500.00),
+('7', '2023-07-01', 2700.00),
+('8', '2023-08-01', 5000.00),
+('9', '2023-09-01', 3800.00),
+('10','2023-10-01', 4500.00);
 
--- Cargo
-INSERT INTO cargo (nomecargo) VALUES
+-- Cargo (seus dados originais)
+INSERT INTO public.cargo (nomecargo) VALUES
 ('Vendedor'),
 ('Gerente'),
 ('Caixa'),
@@ -132,8 +134,8 @@ INSERT INTO cargo (nomecargo) VALUES
 ('TI'),
 ('Marketing');
 
--- Funcionario
-INSERT INTO funcionario VALUES
+-- Funcionario (seus dados originais)
+INSERT INTO public.funcionario (pessoacdpessoa, salario, cargosidcargo) VALUES
 ('1',2000,1),
 ('2',5000,2),
 ('3',1800,3),
@@ -145,8 +147,8 @@ INSERT INTO funcionario VALUES
 ('9',4000,9),
 ('10',2800,10);
 
--- Produto
-INSERT INTO produto (nomeproduto, quantidadeemestoque, precounitario) VALUES
+-- Produto (seus dados originais)
+INSERT INTO public.produto (nomeproduto, quantidadeemestoque, precounitario) VALUES
 ('Nike Air Max',50,699.90),
 ('Adidas Ultraboost',40,799.90),
 ('Puma Suede Classic',60,399.90),
@@ -158,8 +160,8 @@ INSERT INTO produto (nomeproduto, quantidadeemestoque, precounitario) VALUES
 ('Fila Disruptor II',45,379.90),
 ('Reebok Classic Leather',65,329.90);
 
--- Pedido
-INSERT INTO pedido (datadopedido, clientepessoacdpessoa, funcionariopessoacdpessoa) VALUES
+-- Pedido (seus dados originais)
+INSERT INTO public.pedido (datadopedido, clientepessoacdpessoa, funcionariopessoacdpessoa) VALUES
 ('2023-01-05','1','2'),
 ('2023-02-10','3','4'),
 ('2023-03-15','5','6'),
@@ -171,8 +173,8 @@ INSERT INTO pedido (datadopedido, clientepessoacdpessoa, funcionariopessoacdpess
 ('2023-09-18','4','9'),
 ('2023-10-22','5','1');
 
--- PedidoHasProduto (CORRIGIDO - com preços e quantidades realistas)
-INSERT INTO pedidohasproduto VALUES
+-- PedidoHasProduto (seus dados originais)
+INSERT INTO public.pedidohasproduto (produtoidproduto, pedidoidpedido, quantidade, precounitario) VALUES
 (1,1,1,699.90),  -- 1 Nike Air Max por R$ 699,90
 (2,2,1,799.90),  -- 1 Adidas Ultraboost por R$ 799,90
 (3,3,2,399.90),  -- 2 Puma Suede Classic por R$ 399,90 cada
@@ -184,8 +186,8 @@ INSERT INTO pedidohasproduto VALUES
 (9,9,2,379.90),  -- 2 Fila Disruptor II por R$ 379,90 cada
 (10,10,1,329.90); -- 1 Reebok Classic Leather por R$ 329,90
 
--- FormaDePagamento
-INSERT INTO formadepagamento (nomeformapagamento) VALUES
+-- FormaDePagamento (seus dados originais)
+INSERT INTO public.formadepagamento (nomeformapagamento) VALUES
 ('Dinheiro'),
 ('Cartao Debito'),
 ('Cartao Credito'),
@@ -197,8 +199,8 @@ INSERT INTO formadepagamento (nomeformapagamento) VALUES
 ('Criptomoeda'),
 ('Carteira Digital');
 
--- Pagamento (CORRIGIDO - valores compatíveis com os produtos)
-INSERT INTO pagamento VALUES
+-- Pagamento (seus dados originais)
+INSERT INTO public.pagamento (pedidoidpedido, datapagamento, valortotalpagamento) VALUES
 (1,'2023-01-06 10:00:00',699.90),   -- Nike Air Max: 1 × 699.90
 (2,'2023-02-11 11:00:00',799.90),   -- Adidas Ultraboost: 1 × 799.90
 (3,'2023-03-16 14:00:00',799.80),   -- Puma Suede Classic: 2 × 399.90
@@ -210,8 +212,8 @@ INSERT INTO pagamento VALUES
 (9,'2023-09-19 14:40:00',759.80),   -- Fila Disruptor II: 2 × 379.90
 (10,'2023-10-23 09:25:00',329.90);  -- Reebok Classic Leather: 1 × 329.90
 
--- PagamentoHasFormaPagamento (CORRIGIDO - valores compatíveis)
-INSERT INTO pagamentohasformapagamento VALUES
+-- PagamentoHasFormaPagamento (seus dados originais)
+INSERT INTO public.pagamentohasformapagamento (pagamentoidpedido, formapagamentoidformapagamento, valorpago) VALUES
 (1,1,699.90),  -- Pagamento completo em dinheiro
 (2,2,799.90),  -- Pagamento completo no cartão débito
 (3,3,799.80),  -- Pagamento completo no cartão crédito
@@ -224,59 +226,4 @@ INSERT INTO pagamentohasformapagamento VALUES
 (10,10,329.90); -- Pagamento completo via carteira digital
 
 
--- ================================================================
---      CRIAÇÃO E POPULAÇÃO DA TABELA DE USUÁRIOS
--- ================================================================
 
--- cria a tabela "users" que foi excluída.
--- A estrutura deve corresponder ao que o backend espera.
-CREATE TABLE "users" (
-    cduser SERIAL PRIMARY KEY,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    nome VARCHAR(100) NOT NULL,
-    senha VARCHAR(100) NOT NULL,
-    tipo VARCHAR(20) NOT NULL DEFAULT 'cliente' -- (gerente, funcionario, cliente)
-);
-
--- Passo 1: Garantir que a extensão pgcrypto está habilitada
--- (Necessário para a função crypt())
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--- Passo 2: Limpar a tabela "users" para recomeçar do zero
--- RESTART IDENTITY zera o contador do cduser (serial)
-TRUNCATE "users" RESTART IDENTITY CASCADE;
-
--- Passo 3: Criar o usuário GERENTE (Kauan)
--- Conforme seu pedido: A senha em texto puro será 'admin'
-INSERT INTO "users" (email, nome, senha, tipo) VALUES
-('kauan@loja.com', 'Kauan (Gerente)', crypt('admin', gen_salt('bf')), 'gerente');
-
--- Passo 4: Popular "users" com dados dos FUNCIONÁRIOS
--- A senha será: 'funcionario' + o 'cdpessoa' do funcionário
--- Ex: Se Bruno Souza for cdpessoa='123', sua senha será 'funcionario123'
-INSERT INTO "users" (email, nome, senha, tipo)
-SELECT
-  concat('func', p.cdpessoa, '@loja.com') AS email,
-  p.nomepessoa AS nome,
-  crypt(concat('funcionario', p.cdpessoa), gen_salt('bf')) AS senha,
-  'funcionario' AS tipo
-FROM funcionario f
-JOIN pessoa p ON f.pessoacdpessoa = p.cdpessoa
-ON CONFLICT (email) DO NOTHING; -- Não faz nada se o email já existir
-
--- Passo 5: Popular "users" com dados dos CLIENTES
--- A senha será: 'cliente' + o 'cdpessoa' do cliente
--- Ex: Se Ana Silva for cdpessoa='456', sua senha será 'cliente456'
-INSERT INTO "users" (email, nome, senha, tipo)
-SELECT
-  concat('cliente', p.cdpessoa, '@loja.com') AS email,
-  p.nomepessoa AS nome,
-  crypt(concat('cliente', p.cdpessoa), gen_salt('bf')) AS senha,
-  'cliente' AS tipo
-FROM cliente c
-JOIN pessoa p ON c.pessoacdpessoa = p.cdpessoa
-ON CONFLICT (email) DO NOTHING; -- Não faz nada se o email já existir
-
--- Passo 6: Verificar os dados (Opcional)
--- Você verá que a coluna "senha" agora tem códigos longos. ISSO ESTÁ CORRETO.
-SELECT email, nome, tipo, senha FROM "users";
