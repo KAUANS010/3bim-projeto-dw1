@@ -73,6 +73,22 @@ CREATE TABLE pagamentohasformapagamento (
     PRIMARY KEY (pagamentoidpedido, formapagamentoidformapagamento)
 );
 
+
+-- habilita pgcrypto (necessário para crypt())
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- tabela users baseada no seu pedido
+CREATE TABLE IF NOT EXISTS "users" (
+  cduser SERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  nome TEXT NOT NULL,
+  senha TEXT NOT NULL, -- armazenará hash (bcrypt via pgcrypto)
+  tipo TEXT NOT NULL CHECK (tipo IN ('cliente','funcionario','gerente')),
+  quandocriado TIMESTAMP DEFAULT NOW()
+);
+
+
+
 -- =========================
 -- POPULAÇÃO DAS TABELAS
 -- =========================
@@ -206,3 +222,61 @@ INSERT INTO pagamentohasformapagamento VALUES
 (8,8,449.90),  -- Pagamento completo via cheque
 (9,9,759.80),  -- Pagamento completo via criptomoeda
 (10,10,329.90); -- Pagamento completo via carteira digital
+
+
+-- ================================================================
+--      CRIAÇÃO E POPULAÇÃO DA TABELA DE USUÁRIOS
+-- ================================================================
+
+-- cria a tabela "users" que foi excluída.
+-- A estrutura deve corresponder ao que o backend espera.
+CREATE TABLE "users" (
+    cduser SERIAL PRIMARY KEY,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    senha VARCHAR(100) NOT NULL,
+    tipo VARCHAR(20) NOT NULL DEFAULT 'cliente' -- (gerente, funcionario, cliente)
+);
+
+-- Passo 1: Garantir que a extensão pgcrypto está habilitada
+-- (Necessário para a função crypt())
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Passo 2: Limpar a tabela "users" para recomeçar do zero
+-- RESTART IDENTITY zera o contador do cduser (serial)
+TRUNCATE "users" RESTART IDENTITY CASCADE;
+
+-- Passo 3: Criar o usuário GERENTE (Kauan)
+-- Conforme seu pedido: A senha em texto puro será 'admin'
+INSERT INTO "users" (email, nome, senha, tipo) VALUES
+('kauan@loja.com', 'Kauan (Gerente)', crypt('admin', gen_salt('bf')), 'gerente');
+
+-- Passo 4: Popular "users" com dados dos FUNCIONÁRIOS
+-- A senha será: 'funcionario' + o 'cdpessoa' do funcionário
+-- Ex: Se Bruno Souza for cdpessoa='123', sua senha será 'funcionario123'
+INSERT INTO "users" (email, nome, senha, tipo)
+SELECT
+  concat('func', p.cdpessoa, '@loja.com') AS email,
+  p.nomepessoa AS nome,
+  crypt(concat('funcionario', p.cdpessoa), gen_salt('bf')) AS senha,
+  'funcionario' AS tipo
+FROM funcionario f
+JOIN pessoa p ON f.pessoacdpessoa = p.cdpessoa
+ON CONFLICT (email) DO NOTHING; -- Não faz nada se o email já existir
+
+-- Passo 5: Popular "users" com dados dos CLIENTES
+-- A senha será: 'cliente' + o 'cdpessoa' do cliente
+-- Ex: Se Ana Silva for cdpessoa='456', sua senha será 'cliente456'
+INSERT INTO "users" (email, nome, senha, tipo)
+SELECT
+  concat('cliente', p.cdpessoa, '@loja.com') AS email,
+  p.nomepessoa AS nome,
+  crypt(concat('cliente', p.cdpessoa), gen_salt('bf')) AS senha,
+  'cliente' AS tipo
+FROM cliente c
+JOIN pessoa p ON c.pessoacdpessoa = p.cdpessoa
+ON CONFLICT (email) DO NOTHING; -- Não faz nada se o email já existir
+
+-- Passo 6: Verificar os dados (Opcional)
+-- Você verá que a coluna "senha" agora tem códigos longos. ISSO ESTÁ CORRETO.
+SELECT email, nome, tipo, senha FROM "users";

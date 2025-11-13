@@ -2,7 +2,14 @@ const express = require('express');
 const app = express();
 const path = require('path');
 
+
+
+const cors = require('cors');
+
+
+
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
 
 // Importar a configuração do banco PostgreSQL
 const db = require('./database'); // Ajuste o caminho conforme necessário
@@ -25,27 +32,69 @@ app.use(express.static(caminhoFrontend));
 
 app.use(cookieParser());
 
+// adicionar session middleware (colocar antes das rotas)
+app.use(session({
+  name: 'sid',
+  secret: process.env.SESSION_SECRET || 'troque_essa_chave_em_producao',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 8,
+    sameSite: 'none', // permite enviar cookie em requests cross-origin (apenas para DEV)
+    secure: false     // em produção com sameSite:'none' deve ser true e usar HTTPS
+  }
+}));
+// servir assets públicos (session-manager.js)
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+
+// --- INÍCIO DA ALTERAÇÃO ---
+
 // Middleware para permitir CORS (Cross-Origin Resource Sharing)
-// Isso é útil se você estiver fazendo requisições de um frontend que está rodando em um domínio diferente
-// ou porta do backend.
-// Em produção, você deve restringir isso para domínios específicos por segurança.
-// Aqui, estamos permitindo qualquer origem, o que é útil para desenvolvimento, mas deve ser ajustado em produção.
-app.use((req, res, next) => {
-  const allowedOrigins = ['http://127.0.0.1:5500','http://localhost:5500', 'http://127.0.0.1:5501', 'http://localhost:3000', 'http://localhost:3001'];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Credentials', 'true');
+// AQUI VOCÊ LISTA AS ORIGENS DO SEU FRONTEND (Onde o login.html está rodando)
+const allowedOrigins = ['http://127.0.0.1:5500', 'http://localhost:5500', 'http://127.0.0.1:3001', 'http://localhost:3001'];
 
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200); // <-- responde ao preflight
-  }
+app.use(cors({
+  origin: function (origin, callback) {
+    console.log('CORS origin:', origin); // DEBUG: mostra qual origin está chegando
+    // Permite requisições sem 'origin' (curl, Postman, etc)
+    if (!origin) return callback(null, true);
 
-  next();
-});
+    // Em desenvolvimento, permitir qualquer origin para facilitar (remova/ajuste em produção)
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    // Em produção apenas orígens listadas
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política de CORS para este site não permite acesso da Origem especificada.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true // Permite o envio de cookies (sessão)
+}));
+
+// --- FIM DA ALTERAÇÃO ---
+
+
+// Middleware para interpretar o corpo das requisições como JSON
+app.use(express.json());
+
+
+// 1. Importa o arquivo que define as rotas de login, logout, etc.
+//const loginautenticacaoRoutes = require('./routes/loginautenticacaoRoutes');
+
+// 2. Diz ao Express para usar essas rotas.
+//app.use(loginautenticacaoRoutes);
+
+
+// --- INÍCIO DA ALTERAÇÃO ---
+// O BLOCO DE CÓDIGO MANUAL DE CORS QUE ESTAVA AQUI FOI REMOVIDO.
+// Ele era redundante com o 'app.use(cors({...}))' acima e causava conflito.
+// --- FIM DA ALTERAÇÃO ---
+
 
 // Middleware para adicionar a instância do banco de dados às requisições
 app.use((req, res, next) => {
@@ -54,7 +103,7 @@ app.use((req, res, next) => {
 });
 
 // Middlewares
-app.use(express.json());
+// app.use(express.json()); // <-- REMOVIDO DAQUI, pois já foi definido lá em cima (linha 79)
 
 // Middleware de tratamento de erros JSON malformado
 app.use((err, req, res, next) => {
@@ -93,6 +142,10 @@ app.use('/pedidohasproduto', pedidohasprodutoRoutes);
 
 const formadepagamentoRoutes = require('./routes/formadepagamentoRoutes');
 app.use('/formadepagamento', formadepagamentoRoutes);
+
+const loginautenticacaoRoutes = require('./routes/loginautenticacaoRoutes');
+app.use('/login', loginautenticacaoRoutes);
++app.use('/', loginautenticacaoRoutes);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

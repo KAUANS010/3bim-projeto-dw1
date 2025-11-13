@@ -1,39 +1,33 @@
+// backend/controllers/menuController.js
 
-// menuController.js
 const path = require('path');
 
-exports.abrirMenu = (req, res) => {
-    console.log('menuController - Rota / - Menu Acessando menu.html');
-    res.sendFile(path.join(__dirname, '../../frontend/menu.html'));
+// Função que será chamada pela rota para abrir a página do menu
+const abrirMenu = (req, res) => {
+  try {
+    // O ideal é que a verificação de 'gerente' já tenha sido feita pelo middleware na rota.
+    // Aqui, apenas enviamos o arquivo HTML.
+    const caminhoDoArquivo = path.join(__dirname, '../../frontend/menu.html');
+    res.sendFile(caminhoDoArquivo);
+  } catch (error) {
+    console.error('Erro ao tentar servir o arquivo menu.html:', error);
+    res.status(500).json({ message: 'Erro interno ao carregar a página do menu.' });
+  }
 };
 
-
-exports.logout = (req, res) => {
-    // Implementação da rota logout
-    res.send('Rota logout');
+// Função para fazer logout (embora o ideal seja centralizar isso no loginautenticacaoController)
+const logout = (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ message: 'Erro ao fazer logout' });
+    }
+    res.clearCookie('sid'); // 'sid' é o nome do cookie de sessão que você definiu no server.js
+    res.json({ message: 'Logout bem-sucedido' });
+  });
 };
-// app.get('/inicio', (req, res) => {
-//     console.log('rota menu/inicio - Acessando index.html');
-//     res.sendFile(path.join(__dirname, '../index.html'));
-// });
 
-// let mnemonicoProfessorGlobal = null;
-// // Rota de menu (protege via cookie) - checkAuth 
-// app.get('/usuarioLogado', (req, res) => {
-//     console.log('Acessando rota /usuarioLogado');
-//     const nome = req.cookies.usuarioLogado;
-//     if (nome) {
-//         res.json({ status: 'ok', nome, mnemonicoProfessor: mnemonicoProfessorGlobal });
-//     } else {
-//         res.json({ status: 'nao_logado' });
-//     }
-// });
-
-
-// // Rota de logout
-// app.post('/logout', (req, res) => {
-//     console.log('Rota de logout acessada');
-//     res.clearCookie('usuarioLogado');
-//     mnemonicoProfessorGlobal = null;
-//     res.json({ status: 'ok', message: 'Usuário deslogado com sucesso' });
-// });
+// Exportamos as funções para que as rotas possam usá-las
+module.exports = {
+  abrirMenu,
+  logout
+};

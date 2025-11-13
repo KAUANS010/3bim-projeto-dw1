@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Carregando Loja...</title>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // 1. Pergunta ao servidor se já existe uma sessão válida
+                const response = await fetch('http://localhost:3001/check-session', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Servidor não respondeu. Indo para o login.');
+                }
+
+                const data = await response.json();
+
+                // 2. Decide para onde te levar
+                if (data.logado) {
+                    // 2a. SE ESTÁ LOGADO...
+                    if (data.user.tipo === 'gerente') {
+                        // ...e é gerente, vai para o menu.
+                        window.location.href = 'menu.html';
+                    } else {
+                        // ...e é cliente/funcionário, vai para a loja (página futura)
+                        // window.location.href = 'loja.html'; 
+                        alert('Logado como cliente/funcionário. Página da loja ainda não criada.');
+                        // Por enquanto, vamos para o login mesmo
+                        window.location.href = 'login/login.html';
+                    }
+                } else {
+                    // 2b. SE NÃO ESTÁ LOGADO...
+                    // ...vai para a página de login.
+                    window.location.href = 'login/login.html';
+                }
+            } catch (error) {
+                console.error('Erro ao verificar sessão, redirecionando para login:', error);
+                // Se qualquer coisa der errado (ex: backend desligado), vai para o login.
+                window.location.href = 'login/login.html';
+            }
+        });
+    </script>
+</head>
+<body>
+    <p style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+        Carregando...
+    </p>
+</body>
+</html>
