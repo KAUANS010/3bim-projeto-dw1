@@ -44,7 +44,7 @@ async function verificarSenha() {
 
     if (data.status === 'ok') {
         alert("Login bem-sucedido! Bem-vindo, " + data.nome);
-        window.location.href = API_BASE_URL + "../frontend/menu/menu.html";
+        window.location.href = API_BASE_URL + "/menu/menu.html";
     } else {
         alert("Senha incorreta!");
     }
