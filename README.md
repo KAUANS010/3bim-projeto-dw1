@@ -14,4 +14,5 @@ Tudo o que eu consegui fazer do projeto eu fiz da maneira que eu queria, e é co
 
 Minha experiência com IA foi bem variável, uma hora dava muito certo, outra hora dava muito errado, mas eu aprendi como realmente lidar com ela, aprendi que existem métodos e maneiras diferentes de fazer com que ela te ajude corretamente.
 
-Para mim não tem uma parte mais fácil ou importante especifica, o projeto inteiro foi importante, cada parte com sua dificuldade e sua facilidade dependendo do que se tratava. Eu com toda certeza prefiro frontend, e mais compreensível, e melhor de se lidar, e eu gosto bastante. Mas com toda certeza entendo a necessidade do banckend, ambos tem que andar em conjunto, banckend exige um raciocínio mais lógico e tem um comportamento completamente diferente do frontend.
+Para mim não tem uma parte mais fácil ou importante especifica, o projeto inteiro foi importante, cada parte com sua dificuldade e sua facilidade dependendo do que se tratava. Eu com toda certeza prefiro frontend, e mais compreensível, e melhor de se lidar, e eu gosto bastante. Mas com toda certeza entendo a necessidade do banckend, ambos tem que andar em conjunto, banckend exige um raciocínio mais lógico e tem um comportamento completamente diferente do frontend. e aprendi a usar um pouco o github.
+
