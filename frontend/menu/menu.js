@@ -55,11 +55,16 @@ async function verificarAutorizacao() {
     const data = await res.json();
     console.log("Resposta do servidor:", data);
 
-    if (data.status === 'ok') {
-      console.log("Usuário logado:", data.usuario);
-      // Exemplo: mostra o nome na tela
-      document.getElementById("oUsuario").options[0].text = `${data.usuario}`;
-      return true;
+   if (data.status === 'ok') {
+    console.log("Usuário logado:", data.usuario);
+    
+    // ATUALIZAÇÃO: Muda o texto do span novo ao invés do select
+    const nomeDisplay = document.getElementById("nomeUsuarioDisplay");
+    if (nomeDisplay) {
+        nomeDisplay.innerText = data.usuario;
+    }
+    
+    return true;
     } else {
       console.log("Usuário não logado, redirecionando...");
        window.location.href = "../login/login.html"; 

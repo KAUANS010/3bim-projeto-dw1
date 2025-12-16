@@ -11,11 +11,21 @@
   <header>
     <div class="topo">
       <h3>Painel do Gerente</h3>
-      <select id="oUsuario" onchange="handleUserAction(this.value)">
-        <option value="">Nome do Gerente</option>
-        <option value="gerenciar-conta">Gerenciar Conta</option>
-        <option value="sair">Sair</option>
-      </select>
+      
+      <div class="user-menu-container">
+        <div class="user-info">
+          <span class="user-name" id="nomeUsuarioDisplay">Carregando...</span>
+          <div class="user-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+        </div>
+        
+        <div class="user-dropdown">
+          <a href="#" onclick="handleUserAction('gerenciar-conta')">Gerenciar Conta</a>
+          <a href="#" onclick="handleUserAction('sair')" class="logout-btn">Sair</a>
+        </div>
+      </div>
+
     </div>
 
     <nav class="nav">

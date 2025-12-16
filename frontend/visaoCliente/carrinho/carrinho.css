@@ -1,0 +1,220 @@
+:root {
+  /* Paleta de Cores Azul e Cinza */
+  --primary-color: #1e3a8a;       /* Azul Marinho Profundo */
+  --primary-hover: #172554;       /* Azul Quase Preto para hover */
+  --accent-color: #3b82f6;        /* Azul Brilhante para destaques */
+  --text-dark: #1f2937;           /* Cinza Escuro para textos */
+  --text-light: #6b7280;          /* Cinza Médio para legendas */
+  --bg-body: #f3f4f6;             /* Cinza muito claro para fundo */
+  --bg-container: #ffffff;        /* Branco */
+  --border-color: #e5e7eb;        /* Cinza claro para bordas */
+  --danger-color: #ef4444;        /* Vermelho suave para erros/remover */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  margin: 0;
+  padding: 40px 20px;
+  background-color: var(--bg-body);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+h1 {
+  color: var(--primary-color);
+  text-align: center;
+  margin-bottom: 40px;
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: -0.5px;
+}
+
+/* Container Principal */
+.container {
+  max-width: 900px; /* Aumentei um pouco para dar respiro */
+  margin: 0 auto;
+  background-color: var(--bg-container);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Sombra mais suave e moderna */
+}
+
+/* Tabela */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+
+thead th {
+  background-color: #f8fafc;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  padding: 16px;
+  border-bottom: 2px solid var(--border-color);
+  text-align: left;
+}
+
+tbody td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-dark);
+  vertical-align: middle;
+}
+
+/* Input de Quantidade */
+input[type="number"] {
+  width: 70px;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  color: var(--text-dark);
+  transition: all 0.2s;
+  outline: none;
+}
+
+input[type="number"]:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Total */
+.total {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  text-align: right;
+  margin: 30px 0;
+  padding-top: 20px;
+  border-top: 2px solid var(--border-color);
+}
+
+/* Botões Gerais */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+/* Botão Principal (Finalizar) */
+#btn-finalizar {
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.3);
+}
+
+#btn-finalizar:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(30, 58, 138, 0.4);
+}
+
+#btn-finalizar:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Botão Secundário (Continuar Comprando) */
+a.btn {
+  background-color: white;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  margin-right: 10px;
+}
+
+a.btn:hover {
+  background-color: #eff6ff;
+}
+
+/* Botão Limpar (Estilo mais discreto/texto) */
+.btn-limpar {
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  margin-right: auto; /* Empurra os outros botões para a direita */
+}
+
+.btn-limpar:hover {
+  background-color: #fee2e2;
+  color: var(--danger-color);
+  border-color: #fecaca;
+}
+
+/* Botão Remover (Dentro da tabela) */
+.btn-remover {
+  background-color: white;
+  border: 1px solid #fecaca;
+  color: var(--danger-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-remover:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+/* Área de Ações (Flexbox para alinhar) */
+.acoes {
+  display: flex;
+  justify-content: flex-end; /* Alinha à direita */
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+/* Link Voltar (Rodapé) */
+.voltar {
+  display: block;
+  text-align: center;
+  margin-top: 40px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.voltar:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+/* Responsividade Básica */
+@media (max-width: 600px) {
+  .acoes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-limpar {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  td, th {
+    padding: 10px 5px;
+    font-size: 0.9rem;
+  }
+}
